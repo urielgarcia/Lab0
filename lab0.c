@@ -76,6 +76,7 @@ int main(void)
 {
 	// Varaible for character recived by UART.
 	int receivedChar;
+        int event=1;
 
 	//RPINR18 is a regsiter for selectable input mapping (see Table 10-2) for 
 	// for UART1. U1RX is 8 bit value used to specifiy connection to which
@@ -103,9 +104,16 @@ int main(void)
 	// Assign the TRISB bit for this pin to configure this port as an input.
         TRISBbits.TRISB5 = 1;
 
+        
         LATBbits.LATB14 = 1;
         LATBbits.LATB13 = 1;
         LATBbits.LATB12 = 1;
+              
+
+  
+
+       
+        
 
 	// Clear Timer value (i.e. current tiemr value) to 0
 	TMR1 = 0;				
@@ -185,25 +193,39 @@ int main(void)
 	// the program should run as long as the device is powered on. 
 	while(1)
 	{
+
 		// **TODO** Modified the main loop of the software application such that 
 		// whenever the SW1 is continuously pressed, the currently selected LED 
 		// will blink twice as fast. When SW1 is released the LEDs will blink at 
 		// the initially defined rate.
 
-            if(PORTBbits.RB5 == 0){
-                TMR1 = 0;
-                PR1 = 7200;
-                while(PORTBbits.RB5 == 0){
 
-                }
+          if(PORTBbits.RB5 ==0 && event == 1  ) {
+              TMR1 = 0;
+              PR1 = 7200;
+                
+                event= 0;
+          
+          }
+
+           if(PORTBbits.RB5 ==1 && event == 0){
                 TMR1 = 0;
-                PR1 = 14400;
-            }
+               PR1= 14400;
+                   
+                    event=1;
+           }
+
+//      
+
+
+
+
+
 
 
 		// Use the UART RX interrupt flag to wait until we recieve a character.
-		if(IFS0bits.U1RXIF == 1) {	
-
+		if(IFS0bits.U1RXIF == 1) {
+     
 			// U1RXREG stores the last character received by the UART. Read this 
 			// value into a local variable before processing.
 			receivedChar = U1RXREG;
@@ -218,6 +240,11 @@ int main(void)
 				// Assign ledToToggle to the number corresponding to the number 
 				// entered. We can do this by subtracting the value for 
 				// the character '0'.
+         
+         LATBbits.LATB15 = 1;
+         LATBbits.LATB14 = 1;
+         LATBbits.LATB13 = 1;
+         LATBbits.LATB12 = 1;
 				ledToToggle = receivedChar - '0';
 
 				// Print a confirmation message.
@@ -227,6 +254,8 @@ int main(void)
 				// Display error message.
 				printf("Invalid LED Selection!\n\r");
 			}
+
+
 
 			// Clear the UART RX interrupt flag to we can detect the reception
 			// of another character.
@@ -255,10 +284,14 @@ int main(void)
 void _ISR _T1Interrupt(void)
 {
 	// Clear Timer 1 interrupt flag to allow another Timer 1 interrupt to occur.
-	IFS0bits.T1IF = 0;		
+	IFS0bits.T1IF = 0;
+
+//        
 	
 	// Toggle the LED Specified by the User.
+       
 	LATB ^= ((0x1000)<<(7-ledToToggle));
+      
 }
 
 // ******************************************************************************************* //
